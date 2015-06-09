@@ -17,6 +17,7 @@
 package org.lucasr.twowayview.sample;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,21 +25,18 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import org.lucasr.twowayview.TwoWayLayoutManager;
-import org.lucasr.twowayview.widget.TwoWayView;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
 import org.lucasr.twowayview.widget.StaggeredGridLayoutManager;
+import org.lucasr.twowayview.widget.TwoWayView;
 
 import java.util.ArrayList;
-import java.util.List;
 
-public class LayoutAdapter extends RecyclerView.Adapter<LayoutAdapter.SimpleViewHolder> {
+public class LayoutAdapter extends StateSavingRecyclerAdapter {
     private static final int COUNT = 100;
 
     private final Context mContext;
     private final TwoWayView mRecyclerView;
-    private final List<Integer> mItems;
     private final int mLayoutId;
-    private int mCurrentItemId = 0;
 
     public static class SimpleViewHolder extends RecyclerView.ViewHolder {
         public final TextView title;
@@ -51,24 +49,33 @@ public class LayoutAdapter extends RecyclerView.Adapter<LayoutAdapter.SimpleView
 
     public LayoutAdapter(Context context, TwoWayView recyclerView, int layoutId) {
         mContext = context;
-        mItems = new ArrayList<Integer>(COUNT);
+        items = new ArrayList<ParcelableInteger>(COUNT);
         for (int i = 0; i < COUNT; i++) {
-            addItem(i);
+            addItem(i, new ParcelableInteger(i + 1));
         }
 
         mRecyclerView = recyclerView;
         mLayoutId = layoutId;
     }
 
-    public void addItem(int position) {
-        final int id = mCurrentItemId++;
-        mItems.add(position, id);
+    public void addItem(int position, ParcelableInteger datum) {
+        items.add(position, datum);
         notifyItemInserted(position);
     }
 
     public void removeItem(int position) {
-        mItems.remove(position);
+        items.remove(position);
         notifyItemRemoved(position);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
     }
 
     @Override
@@ -78,13 +85,15 @@ public class LayoutAdapter extends RecyclerView.Adapter<LayoutAdapter.SimpleView
     }
 
     @Override
-    public void onBindViewHolder(SimpleViewHolder holder, int position) {
-        holder.title.setText(mItems.get(position).toString());
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        final ParcelableInteger datum = (ParcelableInteger) items.get(position);
+        final SimpleViewHolder bindingViewHolder = (SimpleViewHolder) holder;
+        bindingViewHolder.title.setText("" + datum.value);
 
         boolean isVertical = (mRecyclerView.getOrientation() == TwoWayLayoutManager.Orientation.VERTICAL);
         final View itemView = holder.itemView;
 
-        final int itemId = mItems.get(position);
+        final int itemId = datum.value - 1;
 
         if (mLayoutId == R.layout.layout_staggered_grid) {
             final int dimenId;
@@ -139,6 +148,6 @@ public class LayoutAdapter extends RecyclerView.Adapter<LayoutAdapter.SimpleView
 
     @Override
     public int getItemCount() {
-        return mItems.size();
+        return items.size();
     }
 }

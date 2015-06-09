@@ -28,20 +28,23 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import static android.support.v7.widget.RecyclerView.SCROLL_STATE_IDLE;
-import static android.support.v7.widget.RecyclerView.SCROLL_STATE_DRAGGING;
-import static android.support.v7.widget.RecyclerView.SCROLL_STATE_SETTLING;
-
 import org.lucasr.twowayview.ItemClickSupport;
 import org.lucasr.twowayview.ItemClickSupport.OnItemClickListener;
 import org.lucasr.twowayview.ItemClickSupport.OnItemLongClickListener;
 import org.lucasr.twowayview.widget.DividerItemDecoration;
 import org.lucasr.twowayview.widget.TwoWayView;
 
+import static android.support.v7.widget.RecyclerView.SCROLL_STATE_DRAGGING;
+import static android.support.v7.widget.RecyclerView.SCROLL_STATE_IDLE;
+import static android.support.v7.widget.RecyclerView.SCROLL_STATE_SETTLING;
+
 public class LayoutFragment extends Fragment {
     private static final String ARG_LAYOUT_ID = "layout_id";
 
     private TwoWayView mRecyclerView;
+    private LayoutAdapter adapter;
+    private RecyclerView.LayoutManager layoutManager;
+
     private TextView mPositionText;
     private TextView mCountText;
     private TextView mStateText;
@@ -57,6 +60,12 @@ public class LayoutFragment extends Fragment {
         fragment.setArguments(args);
 
         return fragment;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        adapter.onSaveInstanceState(outState);
     }
 
     @Override
@@ -81,6 +90,12 @@ public class LayoutFragment extends Fragment {
         mToast.setGravity(Gravity.CENTER, 0, 0);
 
         mRecyclerView = (TwoWayView) view.findViewById(R.id.list);
+        layoutManager = mRecyclerView.getLayoutManager();
+        adapter = new LayoutAdapter(activity, mRecyclerView, mLayoutId);
+        if (savedInstanceState != null) {
+            adapter.onRestoreInstanceState(savedInstanceState);
+        }
+
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLongClickable(true);
 
@@ -125,7 +140,7 @@ public class LayoutFragment extends Fragment {
         final Drawable divider = getResources().getDrawable(R.drawable.divider);
         mRecyclerView.addItemDecoration(new DividerItemDecoration(divider));
 
-        mRecyclerView.setAdapter(new LayoutAdapter(activity, mRecyclerView, mLayoutId));
+        mRecyclerView.setAdapter(adapter);
     }
 
     private void updateState(int scrollState) {
