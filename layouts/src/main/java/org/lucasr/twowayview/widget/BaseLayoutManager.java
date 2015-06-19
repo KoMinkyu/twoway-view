@@ -142,6 +142,8 @@ public abstract class BaseLayoutManager extends TwoWayLayoutManager {
     protected final Rect mTempRect = new Rect();
     protected final LaneInfo mTempLaneInfo = new LaneInfo();
 
+    protected boolean restoreEnabled = true;
+
     public BaseLayoutManager(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
@@ -408,6 +410,10 @@ public abstract class BaseLayoutManager extends TwoWayLayoutManager {
 
     @Override
     public Parcelable onSaveInstanceState() {
+        if (!isRestoreEnabled()) {
+            return null;
+        }
+
         final Parcelable superState = super.onSaveInstanceState();
         final LanedSavedState state = new LanedSavedState(superState);
 
@@ -428,6 +434,10 @@ public abstract class BaseLayoutManager extends TwoWayLayoutManager {
 
     @Override
     public void onRestoreInstanceState(Parcelable state) {
+        if (!isRestoreEnabled()) {
+            return;
+        }
+
         final LanedSavedState ss = (LanedSavedState) state;
 
         if (ss.lanes != null && ss.laneSize > 0) {
@@ -560,6 +570,14 @@ public abstract class BaseLayoutManager extends TwoWayLayoutManager {
     @Override
     public LayoutParams generateLayoutParams(Context c, AttributeSet attrs) {
         return new LayoutParams(c, attrs);
+    }
+
+    protected boolean isRestoreEnabled() {
+        return restoreEnabled;
+    }
+
+    public void setRestoreEnabled(boolean isRestoreEnable) {
+        restoreEnabled = isRestoreEnable;
     }
 
     abstract int getLaneCount();
